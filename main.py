@@ -9,7 +9,7 @@ from estInitialize import estInitialize
 
 #provide the index of the experimental run you would like to use.
 # Note that using "0" means that you will load the measurement calibration data.
-experimentalRun = 2
+experimentalRun = 9
 
 print('Loading the data file #', experimentalRun)
 experimentalData = np.genfromtxt ('data/run_{0:03d}.csv'.format(experimentalRun), delimiter=',')
@@ -26,6 +26,7 @@ numDataPoints = experimentalData.shape[0]
 estimatedPosition_x = np.zeros([numDataPoints,])
 estimatedPosition_y = np.zeros([numDataPoints,])
 estimatedAngle = np.zeros([numDataPoints,])
+est_vel = np.zeros([numDataPoints,])
 
 print('Running the system')
 dt = experimentalData[1,0] - experimentalData[0,0]
@@ -43,9 +44,11 @@ for k in range(numDataPoints):
     estimatedPosition_x[k] = x
     estimatedPosition_y[k] = y
     estimatedAngle[k] = theta
+    #est_vel[k] = internalState[3]
     
 
 print('Done running')
+plt.plot(estimatedAngle)
 #make sure the angle is in [-pi,pi]
 estimatedAngle = np.mod(estimatedAngle+np.pi,2*np.pi)-np.pi
 
