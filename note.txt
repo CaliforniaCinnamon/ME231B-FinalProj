@@ -24,11 +24,18 @@ actual: (x2 y2)
 
 
 /*****************************/
-error when 100% trust measurement and dynamics without noise
+error when 100% trust measurement and dynamics without noise (data3)
    pos x = -0.05093431153302763 m
    pos y = 2.397651516424652 m
    angle = 0.02192181273717697 rad
 /*****************************/
+error when there is no process noise
+   pos x = -0.14447609323906452 m
+   pos y = 0.22018068931283175 m
+   angle = 0.32118928975616345 rad
+/*****************************/
+
+
 x0 and P0 gained from the first measurement
 0.8372542421396083
 0.9710742617314116
