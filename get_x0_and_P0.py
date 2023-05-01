@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 x0_arr = np.zeros((100,5))
 
@@ -21,10 +21,11 @@ for i in range(100):
     x0_arr[i,3] = 5*(0.425)*nparray[0,2]
     x0_arr[i,4] = nparray[0,1]
 
+plt.hist(x0_arr[:,4], bins=15)
+#plt.hist(x0_arr[:,1])
+plt.show()
+
 x0 = np.mean(x0_arr, axis=0)
 #p0 = np.var(x0_arr, axis=0)
 #P0 = np.diag(p0)
 P0 = np.cov(x0_arr, rowvar=False)
-
-print(x0)
-print(P0)
