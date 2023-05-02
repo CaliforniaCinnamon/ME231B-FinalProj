@@ -9,7 +9,7 @@ from estInitialize import estInitialize
 
 #provide the index of the experimental run you would like to use.
 # Note that using "0" means that you will load the measurement calibration data.
-experimentalRun = 9
+experimentalRun = 1
 
 print('Loading the data file #', experimentalRun)
 experimentalData = np.genfromtxt ('data/run_{0:03d}.csv'.format(experimentalRun), delimiter=',')
@@ -59,12 +59,15 @@ angErr   = np.mod(estimatedAngle - experimentalData[:,7]+np.pi,2*np.pi)-np.pi
 print('Final error: ')
 print('   pos x =',posErr_x[-1],'m')
 print('   pos y =',posErr_y[-1],'m')
+print('   dist  =',np.sqrt(posErr_x[-1]**2 + posErr_y[-1]**2))
 print('   angle =',angErr[-1],'rad')
+print('   final score: ', np.abs(posErr_x[-1])+np.abs(posErr_y[-1])+np.abs(angErr[-1]))
 
 ax = np.sum(np.abs(posErr_x))/numDataPoints
 ay = np.sum(np.abs(posErr_y))/numDataPoints
 ath = np.sum(np.abs(angErr))/numDataPoints
 score = ax + ay + ath
+
 if not np.isnan(score):
     #this is for evaluation by the instructors
     print('average error:')
@@ -74,7 +77,7 @@ if not np.isnan(score):
     print('   angle =', ath, 'rad')
 
     #our scalar score. 
-    print('average score:',score)
+    print('average score:', score)
 
 #===============================================================================
 # make some plots:
