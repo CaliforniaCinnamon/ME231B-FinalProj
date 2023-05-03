@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-x0_arr = np.zeros((100,5))
+x0_arr = np.zeros((100,3))
 
 for i in range(100):
     nparray = np.genfromtxt ('data/run_{0:03d}.csv'.format(i), delimiter=',')
@@ -16,12 +16,9 @@ for i in range(100):
     zx_2 = non_nan_rows[second_earlist_row_idx, 3]
     zy_2 = non_nan_rows[second_earlist_row_idx, 4]
 
-    # obtain theta, vel, gamma from the first row of data
+    # obtain theta from the first row of data
     x0_arr[i,2] = np.arctan2((zy_2 - x0_arr[i,1]),(zx_2 - x0_arr[i,0]))
-    x0_arr[i,3] = 5*(0.425)*nparray[0,2]
-    x0_arr[i,4] = nparray[0,1]
 
-plt.hist(x0_arr[:,4], bins=15)
 #plt.hist(x0_arr[:,1])
 plt.show()
 
@@ -29,3 +26,5 @@ x0 = np.mean(x0_arr, axis=0)
 #p0 = np.var(x0_arr, axis=0)
 #P0 = np.diag(p0)
 P0 = np.cov(x0_arr, rowvar=False)
+
+print(x0, P0)

@@ -14,6 +14,8 @@ experimentalRun = 1
 print('Loading the data file #', experimentalRun)
 experimentalData = np.genfromtxt ('data/run_{0:03d}.csv'.format(experimentalRun), delimiter=',')
 
+experimentalData = experimentalData
+
 #===============================================================================
 # Here, we run your estimator's initialization
 #===============================================================================
@@ -26,7 +28,7 @@ numDataPoints = experimentalData.shape[0]
 estimatedPosition_x = np.zeros([numDataPoints,])
 estimatedPosition_y = np.zeros([numDataPoints,])
 estimatedAngle = np.zeros([numDataPoints,])
-est_vel = np.zeros([numDataPoints,])
+est_pm = np.zeros([numDataPoints,])
 
 print('Running the system')
 dt = experimentalData[1,0] - experimentalData[0,0]
@@ -44,12 +46,13 @@ for k in range(numDataPoints):
     estimatedPosition_x[k] = x
     estimatedPosition_y[k] = y
     estimatedAngle[k] = theta
-    #est_vel[k] = internalState[3]
+    est_pm[k] = np.linalg.det(internalState[3])
     
 
 print('Done running')
-plt.plot(estimatedAngle)
+#plt.plot(est_pm[:24])
 #make sure the angle is in [-pi,pi]
+plt.plot(estimatedAngle)
 estimatedAngle = np.mod(estimatedAngle+np.pi,2*np.pi)-np.pi
 
 posErr_x = estimatedPosition_x - experimentalData[:,5]
@@ -89,6 +92,7 @@ figTopView, axTopView = plt.subplots(1, 1)
 axTopView.plot(experimentalData[:,3], experimentalData[:,4], 'rx', label='Meas')
 axTopView.plot(estimatedPosition_x, estimatedPosition_y, 'b-', label='est')
 axTopView.plot(experimentalData[:,5], experimentalData[:,6], 'k:.', label='true')
+axTopView.scatter(estimatedPosition_x, estimatedPosition_y)
 axTopView.legend()
 axTopView.set_xlabel('x-position [m]')
 axTopView.set_ylabel('y-position [m]')

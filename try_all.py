@@ -4,7 +4,7 @@ from estRun import estRun
 from estInitialize import estInitialize
 import time
 
-trial = 99
+trial = 10
 
 final_error_x = [None]*trial
 final_error_y = [None]*trial
@@ -12,6 +12,7 @@ final_error_theta = [None]*trial
 final_error_dist = [None]*trial
 
 start_time = time.time()
+
 for i in range(1,trial+1):
     print('Running #', i)
     experimentalData = np.genfromtxt ('data/run_{0:03d}.csv'.format(i), delimiter=',')
