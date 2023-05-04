@@ -3,7 +3,7 @@ import scipy
 import matplotlib.pyplot as plt
 #NO OTHER IMPORTS ALLOWED (However, you're allowed to import e.g. scipy.linalg)
 
-def q(sigma_xi, steeringAngle, pedalSpeed, B, r, dt): # dynamics equation
+def q(sigma_xi, omega, gamma, B, r, dt): # dynamics equation
     N = sigma_xi.shape[1]
     x_N = 3 # dimension of the state
     xi = np.zeros((x_N,N))
@@ -14,11 +14,11 @@ def q(sigma_xi, steeringAngle, pedalSpeed, B, r, dt): # dynamics equation
         v1 = sigma_xi[3,i]
         v2 = sigma_xi[4,i]
 
-        vel = 5*r*pedalSpeed + v1
-        gamma = steeringAngle + v2
-        xi[0,i] = x + dt*vel*np.cos(theta)
-        xi[1,i] = y + dt*vel*np.sin(theta)
-        xi[2,i] = theta + dt*vel*np.tan(gamma)/B
+        vel = 5*r*omega + v1
+        gamma += v2
+        xi[0,i] = x + 2*dt*vel*np.cos(theta)
+        xi[1,i] = y + 2*dt*vel*np.sin(theta)
+        xi[2,i] = theta + 0.5*dt*vel*np.tan(gamma)/B
 
     return xi
     # 8 by 16 matrix
@@ -36,7 +36,7 @@ def h(sigma_xp, B): # measurement equation
     
     return sigma_z
 
-def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B, r):
+def implement_UKF(dt, internalStateIn, measurement, B, r):
     # tuning parameters: adjust them to make the best output
     v1 = 0
     v2 = 0
@@ -50,6 +50,8 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
     y_prev = internalStateIn[1]
     theta_prev = internalStateIn[2]
     Pm_prev = internalStateIn[3]
+    omega = internalStateIn[4]
+    gamma = internalStateIn[5]
 
         ### 1. Prior Step
     # define auxiliary variable and its variance matrix
@@ -62,6 +64,8 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
                         [0]])
     x_N = 3 # dimension of the state (x, y, theta)
     xi_N = 7 # dimension of xi (3+2+2=9 -- state, v, w respectively)
+    
+    # make covariance matrix for xi
     var1 = np.concatenate((Pm_prev, np.zeros((x_N, xi_N - x_N))), axis=1)
     var2 = np.concatenate((np.zeros((xi_N - x_N, x_N)), Svw), axis=1)
     var_xi_prev = np.concatenate((var1, var2), axis=0)
@@ -77,7 +81,7 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
         sigma_xi[:,i] = xi_prev.reshape(xi_N,) - sqrt_var[:,i-xi_N]
 
     # compute the prior sigma points with dynamics equation
-    sigma_xp = q(sigma_xi, steeringAngle, pedalSpeed, B, r, dt)
+    sigma_xp = q(sigma_xi, omega, gamma, B, r, dt)
 
     # compute prior statistics
     x_est = np.mean(sigma_xp, axis=1)
@@ -141,13 +145,12 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     Br_list = [(0.72,0.40375),(0.72,0.44625),
                (0.88,0.40375),(0.88,0.44625),
                (0.8,0.425)]
-    #Br_list = [(0.8,0.425)]
     trials = len(Br_list)
     output_state = np.zeros((3,trials)) # 5 variables * 4 implementations
     output_Pm = [None] * trials
 
     for i, (B, r) in enumerate(Br_list):
-        output_state[:,i], output_Pm[i] = implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B, r)
+        output_state[:,i], output_Pm[i] = implement_UKF(dt, internalStateIn, measurement, B, r)
 
     ################## MY CODE ENDS ##########################
 
@@ -157,6 +160,8 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
 
     internalStateOut = list(np.mean(output_state, axis=1)) # x, y, theta
     internalStateOut.append(np.mean(output_Pm, axis=0)) # append Pm at the end
+    internalStateOut.append(pedalSpeed)
+    internalStateOut.append(steeringAngle)
 
 
     x = internalStateOut[0]

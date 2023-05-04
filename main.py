@@ -9,12 +9,12 @@ from estInitialize import estInitialize
 
 #provide the index of the experimental run you would like to use.
 # Note that using "0" means that you will load the measurement calibration data.
-experimentalRun = 1
+experimentalRun = 14
 
 print('Loading the data file #', experimentalRun)
 experimentalData = np.genfromtxt ('data/run_{0:03d}.csv'.format(experimentalRun), delimiter=',')
 
-experimentalData = experimentalData
+#experimentalData = experimentalData[:5]
 
 #===============================================================================
 # Here, we run your estimator's initialization
@@ -50,7 +50,7 @@ for k in range(numDataPoints):
     
 
 print('Done running')
-#plt.plot(est_pm[:24])
+#plt.plot(est_pm)
 #make sure the angle is in [-pi,pi]
 plt.plot(estimatedAngle)
 estimatedAngle = np.mod(estimatedAngle+np.pi,2*np.pi)-np.pi
