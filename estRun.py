@@ -16,16 +16,17 @@ def q(sigma_xi, omega, gamma, B, r, dt): # dynamics equation
 
         vel = 5*r*omega + v1
         gamma += v2
-        xi[0,i] = x + 2*dt*vel*np.cos(theta)
-        xi[1,i] = y + 2*dt*vel*np.sin(theta)
-        xi[2,i] = theta + 0.5*dt*vel*np.tan(gamma)/B
+        xi[0,i] = x + dt*vel*np.cos(theta)
+        xi[1,i] = y + dt*vel*np.sin(theta)
+        #xi[2,i] = theta + dt*vel*np.tan(gamma)/B
+        xi[2,i] = theta + dt*vel*2*np.sin(np.arctan(np.tan(gamma*0.5)))/B
 
     return xi
     # 8 by 16 matrix
 
 def h(sigma_xp, B): # measurement equation
     N = sigma_xp.shape[1]
-    sigma_z = np.zeros((2,N))
+    sigma_z = np.zeros((3,N))
     for i in range(N):
         x = sigma_xp[0,i]
         y = sigma_xp[1,i]
@@ -33,6 +34,7 @@ def h(sigma_xp, B): # measurement equation
         
         sigma_z[0,i] = x + 0.5*B*np.cos(theta) # measurement for x
         sigma_z[1,i] = y + 0.5*B*np.sin(theta) # measurement for y
+        sigma_z[2,i] = theta
     
     return sigma_z
 
@@ -52,8 +54,9 @@ def implement_UKF(dt, internalStateIn, measurement, B, r):
     Pm_prev = internalStateIn[3]
     omega = internalStateIn[4]
     gamma = internalStateIn[5]
+    prev_meas = internalStateIn[6]
 
-        ### 1. Prior Step
+        ######## 1. Prior Step #########
     # define auxiliary variable and its variance matrix
     xi_prev = np.array([[x_prev],
                         [y_prev],
@@ -63,7 +66,7 @@ def implement_UKF(dt, internalStateIn, measurement, B, r):
                         [0],
                         [0]])
     x_N = 3 # dimension of the state (x, y, theta)
-    xi_N = 7 # dimension of xi (3+2+2=9 -- state, v, w respectively)
+    xi_N = xi_prev.shape[0] # dimension of xi (3+2+2=9 -- state, v, w respectively)
     
     # make covariance matrix for xi
     var1 = np.concatenate((Pm_prev, np.zeros((x_N, xi_N - x_N))), axis=1)
@@ -86,35 +89,40 @@ def implement_UKF(dt, internalStateIn, measurement, B, r):
     # compute prior statistics
     x_est = np.mean(sigma_xp, axis=1)
     Pm = np.cov(sigma_xp)
-    """
-        ## Step 2. measurement update if there are a valid measurement
+    
+        ####### Step 2. measurement update if there are a valid measurement #######
     if not (np.isnan(measurement[0]) or np.isnan(measurement[1])):
         # calculate sigma_z points using measurment equation
         sigma_z = h(sigma_xp, B)
+        x_Z = 3 # dimension of measurements
 
         # compute z_hat, Pzz, Pxz from sigma_z points and get Pzz
         z_est = np.mean(sigma_z, axis=1)
-        Pzz = np.cov(sigma_z) + np.eye(2) * 1e-6
+        Pzz = np.cov(sigma_z) + np.eye(x_Z) * 1e-6
 
         # calculate Pxz
-        Pxz = np.zeros((x_N,2))
+        Pxz = np.zeros((x_N,x_Z))
         for i in range(xi_N*2):
-            Pxz += (sigma_xp[:,i] - x_est).reshape(x_N,1) @ (sigma_z[:,i] - z_est).reshape(1,2)
+            Pxz += (sigma_xp[:,i] - x_est).reshape(x_N,1) @ (sigma_z[:,i] - z_est).reshape(1,x_Z)
         Pxz = Pxz / (xi_N*2)
 
         # apply kalman filter
         K = Pxz @ np.linalg.inv(Pzz) # 3 by 2
         z = np.array([[measurement[0]],
-                      [measurement[1]]])
-        x_est = x_est.reshape(x_N,1) + K@(z - z_est.reshape(2,1)) 
+                      [measurement[1]],
+                      [np.arctan2(measurement[1]-prev_meas[1],
+                                  measurement[0]-prev_meas[0])]])
+        x_est = x_est.reshape(x_N,1) + K@(z - z_est.reshape(x_Z,1)) 
         Pm = Pm - K@Pzz@K.T
-    """
+
+        prev_meas = [measurement[0], measurement[1]]
+    
     # results of UKF run
     x = np.squeeze(x_est[0])
     y = np.squeeze(x_est[1])
     theta = np.squeeze(x_est[2])
 
-    return np.array([x, y, theta]), Pm
+    return np.array([x, y, theta]), Pm, prev_meas
 
 
 def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
@@ -150,7 +158,7 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     output_Pm = [None] * trials
 
     for i, (B, r) in enumerate(Br_list):
-        output_state[:,i], output_Pm[i] = implement_UKF(dt, internalStateIn, measurement, B, r)
+        output_state[:,i], output_Pm[i], prev_meas = implement_UKF(dt, internalStateIn, measurement, B, r)
 
     ################## MY CODE ENDS ##########################
 
@@ -162,6 +170,7 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     internalStateOut.append(np.mean(output_Pm, axis=0)) # append Pm at the end
     internalStateOut.append(pedalSpeed)
     internalStateOut.append(steeringAngle)
+    internalStateOut.append(prev_meas)
 
 
     x = internalStateOut[0]

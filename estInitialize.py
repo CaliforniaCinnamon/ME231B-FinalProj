@@ -23,6 +23,7 @@ def estInitialize():
     Pm = np.asarray(Pm)
     omega = 0
     gamma = 0
+    prev_meas = [x, y]
     # note that there is *absolutely no prescribed format* for this internal state.
     # You can put in it whatever you like. Probably, you'll want to keep the position
     # and angle, and probably you'll remove the color.
@@ -31,7 +32,8 @@ def estInitialize():
                      theta,
                      Pm,
                      omega,
-                     gamma]
+                     gamma,
+                     prev_meas]
 
     # replace these names with yours. Delete the second name if you are working alone.
     studentNames = ['Austin Kim']

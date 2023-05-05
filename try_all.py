@@ -4,7 +4,7 @@ from estRun import estRun
 from estInitialize import estInitialize
 import time
 
-trial = 10
+trial = 99
 
 final_error_x = [None]*trial
 final_error_y = [None]*trial
