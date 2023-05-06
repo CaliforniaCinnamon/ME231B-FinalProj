@@ -14,7 +14,7 @@ def q(sigma_xi, steeringAngle, pedalSpeed, B, r, dt): # dynamics equation
         v1 = sigma_xi[3,i]
         v2 = sigma_xi[4,i]
 
-        vel = 5*r*pedalSpeed + v1
+        vel = (5*r*pedalSpeed) + v1
         gamma = steeringAngle + v2
         xi[0,i] = x + dt*vel*np.cos(theta)
         xi[1,i] = y + dt*vel*np.sin(theta)
@@ -38,8 +38,8 @@ def h(sigma_xp, B): # measurement equation
 
 def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B, r):
     # tuning parameters: adjust them to make the best output
-    v1 = 0
-    v2 = 0
+    v1 = 0.02
+    v2 = 0.01
     Svw = np.array([[v1,      0,       0.       , 0.       ],
                     [0,       v2,      0.       , 0.       ],
                     [0,       0,       1.0880701, 0.        ],
@@ -52,7 +52,7 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
     Pm_prev = internalStateIn[3]
 
         ### 1. Prior Step
-    # define auxiliary variable and its variance matrix
+    # define auxiliary variable (xi) and its variance matrix
     xi_prev = np.array([[x_prev],
                         [y_prev],
                         [theta_prev],
@@ -82,7 +82,7 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
     # compute prior statistics
     x_est = np.mean(sigma_xp, axis=1)
     Pm = np.cov(sigma_xp)
-    """
+    
         ## Step 2. measurement update if there are a valid measurement
     if not (np.isnan(measurement[0]) or np.isnan(measurement[1])):
         # calculate sigma_z points using measurment equation
@@ -104,7 +104,7 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
                       [measurement[1]]])
         x_est = x_est.reshape(x_N,1) + K@(z - z_est.reshape(2,1)) 
         Pm = Pm - K@Pzz@K.T
-    """
+    
     # results of UKF run
     x = np.squeeze(x_est[0])
     y = np.squeeze(x_est[1])

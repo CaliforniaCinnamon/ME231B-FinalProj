@@ -8,12 +8,15 @@ meas_data = non_nan_rows[:,3:5]
 real_x = nparray[-1,5]
 real_y = nparray[-1,6]
 real_theta = nparray[-1,7]
-R = 0.87617041920118446300878192822554
-mu_w = np.array([real_x+R*np.cos(real_theta),
-                 real_y+R*np.cos(real_theta)])
+B = 0.87617041920118446300878192822554 # optimized B length
+mu_w = np.array([real_x+B*np.cos(real_theta),
+                 real_y+B*np.cos(real_theta)])
+
 
 w = meas_data - mu_w
 Sww_vec = np.var(w, axis=0)
 Sww = np.diag(Sww_vec)
 
 print(np.mean(w, axis=0))
+
+# try mu_w = (0,0)

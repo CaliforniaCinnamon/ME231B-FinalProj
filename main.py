@@ -50,9 +50,9 @@ for k in range(numDataPoints):
     
 
 print('Done running')
-#plt.plot(est_pm[:24])
+plt.plot(est_pm[:24])
 #make sure the angle is in [-pi,pi]
-plt.plot(estimatedAngle)
+#plt.plot(estimatedAngle)
 estimatedAngle = np.mod(estimatedAngle+np.pi,2*np.pi)-np.pi
 
 posErr_x = estimatedPosition_x - experimentalData[:,5]

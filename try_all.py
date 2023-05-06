@@ -4,12 +4,13 @@ from estRun import estRun
 from estInitialize import estInitialize
 import time
 
-trial = 10
+trial = 99
 
 final_error_x = [None]*trial
 final_error_y = [None]*trial
 final_error_theta = [None]*trial
 final_error_dist = [None]*trial
+final_error_score = [None]*trial
 
 start_time = time.time()
 
@@ -54,9 +55,11 @@ for i in range(1,trial+1):
     final_error_y[i-1] = posErr_y[-1]
     final_error_theta[i-1] = angErr[-1]
     final_error_dist[i-1] = np.sqrt(posErr_x[-1]**2 + posErr_y[-1]**2)
+    final_error_score[i-1] = np.abs(posErr_x[-1]) + np.abs(posErr_y[-1]) + np.abs(angErr[-1])
 end_time = time.time()
 
 print('mean of dist error = ', np.mean(final_error_dist))
+print('mean of score = ', np.mean(final_error_score))
 print('elapsed time = ', end_time - start_time)
 
 fig, axs = plt.subplots(2, 2, figsize=(10, 8))
@@ -66,6 +69,6 @@ axs[0, 1].hist(final_error_y, bins=10)
 axs[0, 1].set_title('final_error_y')
 axs[1, 0].hist(final_error_theta, bins=10)
 axs[1, 0].set_title('final_error_theta')
-axs[1, 1].hist(final_error_dist, bins=10)
-axs[1, 1].set_title('final_error_dist')
+axs[1, 1].hist(final_error_score, bins=10)
+axs[1, 1].set_title('final_error_score')
 plt.show()
