@@ -50,7 +50,7 @@ for k in range(numDataPoints):
     
 
 print('Done running')
-plt.plot(est_pm[:24])
+plt.plot(est_pm[950:])
 #make sure the angle is in [-pi,pi]
 #plt.plot(estimatedAngle)
 estimatedAngle = np.mod(estimatedAngle+np.pi,2*np.pi)-np.pi
@@ -80,7 +80,7 @@ if not np.isnan(score):
     print('   angle =', ath, 'rad')
 
     #our scalar score. 
-    print('average score:', score)
+    print('average smean of dist99core:', score)
 
 #===============================================================================
 # make some plots:

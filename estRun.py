@@ -38,14 +38,14 @@ def h(sigma_xp, B): # measurement equation
 
 def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B, r):
     # tuning parameters: adjust them to make the best output
-    v1 = 0.02
-    v2 = 0.01
+    v1 = 0
+    v2 = 0
     Svw = np.array([[v1,      0,       0.       , 0.       ],
                     [0,       v2,      0.       , 0.       ],
                     [0,       0,       1.0880701, 0.        ],
                     [0,       0,       0.       , 2.98447239]])
 
-    # storing x(k-1)
+    # storing previous state X(k-1)
     x_prev = internalStateIn[0]
     y_prev = internalStateIn[1]
     theta_prev = internalStateIn[2]
@@ -61,7 +61,7 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
                         [0],
                         [0]])
     x_N = 3 # dimension of the state (x, y, theta)
-    xi_N = 7 # dimension of xi (3+2+2=9 -- state, v, w respectively)
+    xi_N = 7 # dimension of xi (3+2+2=7)
     var1 = np.concatenate((Pm_prev, np.zeros((x_N, xi_N - x_N))), axis=1)
     var2 = np.concatenate((np.zeros((xi_N - x_N, x_N)), Svw), axis=1)
     var_xi_prev = np.concatenate((var1, var2), axis=0)
@@ -90,7 +90,8 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
 
         # compute z_hat, Pzz, Pxz from sigma_z points and get Pzz
         z_est = np.mean(sigma_z, axis=1)
-        Pzz = np.cov(sigma_z) + np.eye(2) * 1e-6
+        Pzz = np.cov(sigma_z) # + np.eye(2) * 1e-6 # to enable 
+        #print(Pzz[0][0])
 
         # calculate Pxz
         Pxz = np.zeros((x_N,2))
@@ -102,9 +103,9 @@ def implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B
         K = Pxz @ np.linalg.inv(Pzz) # 3 by 2
         z = np.array([[measurement[0]],
                       [measurement[1]]])
-        x_est = x_est.reshape(x_N,1) + K@(z - z_est.reshape(2,1)) 
-        Pm = Pm - K@Pzz@K.T
-    
+        x_est = x_est.reshape(x_N,1) + K@(z - z_est.reshape(2,1)) # updated estimate
+        Pm = Pm - K@Pzz@K.T # updated uncertainty
+
     # results of UKF run
     x = np.squeeze(x_est[0])
     y = np.squeeze(x_est[1])
@@ -146,7 +147,7 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     output_state = np.zeros((3,trials)) # 5 variables * 4 implementations
     output_Pm = [None] * trials
 
-    for i, (B, r) in enumerate(Br_list):
+    for i, (B, r) in enumerate(Br_list): # repeat for (B and r)
         output_state[:,i], output_Pm[i] = implement_UKF(dt, internalStateIn, steeringAngle, pedalSpeed, measurement, B, r)
 
     ################## MY CODE ENDS ##########################
